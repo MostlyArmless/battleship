@@ -12,9 +12,11 @@ pygame.init()
 # Initialize the pygame sound system and load the sound files we'll be using
 pygame.mixer.init()
 cwd = os.getcwd()
-sounds = {"hit": pygame.mixer.Sound(cwd + "\\explosion.wav"),
-          "miss": pygame.mixer.Sound(cwd + "\\splash.wav"),
-          "buzzer": pygame.mixer.Sound(cwd + "\\buzzer.wav")}
+sounds = {
+    "hit": pygame.mixer.Sound(cwd + "\\explosion.wav"),
+    "miss": pygame.mixer.Sound(cwd + "\\splash.wav"),
+    "buzzer": pygame.mixer.Sound(cwd + "\\buzzer.wav"),
+}
 
 
 def norm_to_range(x, old_range, new_range):
@@ -66,7 +68,7 @@ game_phases = {"setup": 1, "play": 2}
 def quit_screen():
     # Clear the screen and display a quit message
     gameDisplay.fill(colors["white"])
-    fullscreen_message_display('Quitting.', 0.5)
+    fullscreen_message_display("Quitting.", 0.5)
 
 
 class armada:
@@ -79,12 +81,7 @@ class armada:
 
 
 # Number of boats placed, Size of next boat that will be placed
-cursor_sizes = {0: 5,
-                1: 4,
-                2: 3,
-                3: 3,
-                4: 2,
-                5: 1}
+cursor_sizes = {0: 5, 1: 4, 2: 3, 3: 3, 4: 2, 5: 1}
 
 global num_boats_to_place
 num_boats_to_place = 5
@@ -113,12 +110,16 @@ class grid:
         while cell_outside_grid:
             # Based on the cursor orientation, extend the cursor down/right by the boat_size
             if self.cursor_orientation == "vertical":
-                cursor_rows = [x + 1 for x in range(start_row, start_row + self.cursor_size + 1)]
+                cursor_rows = [
+                    x + 1 for x in range(start_row, start_row + self.cursor_size + 1)
+                ]
                 cursor_cols = [start_col] * self.cursor_size
 
             elif self.cursor_orientation == "horizontal":
                 cursor_rows = [start_row] * self.cursor_size
-                cursor_cols = [x + 1 for x in range(start_col, start_col + self.cursor_size + 1)]
+                cursor_cols = [
+                    x + 1 for x in range(start_col, start_col + self.cursor_size + 1)
+                ]
 
             # Zip together the coordinates to check into a list
             cursor_coordinates = list(zip(cursor_rows, cursor_cols))
@@ -132,14 +133,18 @@ class grid:
 
         self.cursor_cells = cursor_coordinates
 
-    def __init__(self, player_ID, x, y, board_size=500, is_active=False, board_type="own"):
+    def __init__(
+        self, player_ID, x, y, board_size=500, is_active=False, board_type="own"
+    ):
         # Constructor for the grid class
 
         # Check inputs
         self.num_cells = 10
         self.board_size = board_size
         self.cell_size = math.floor(self.board_size / self.num_cells * 0.8)
-        self.line_thickness = (self.board_size - (self.cell_size * self.num_cells)) / (self.num_cells + 1)
+        self.line_thickness = (self.board_size - (self.cell_size * self.num_cells)) / (
+            self.num_cells + 1
+        )
         self.board_x = x
         self.board_y = y
         self.player_ID = player_ID
@@ -164,12 +169,22 @@ class grid:
 
     def create_cell_array(self):
         # Initialize a 2d list to put the cell objects into
-        cells = [[cell(x=0, y=0, w=self.cell_size, h=self.cell_size) for i in range(self.num_cells)] for j in range(self.num_cells)]
+        cells = [
+            [
+                cell(x=0, y=0, w=self.cell_size, h=self.cell_size)
+                for i in range(self.num_cells)
+            ]
+            for j in range(self.num_cells)
+        ]
         # Set up the coordinates of each of the cells
         for iRow in range(0, self.num_cells):
             y = self.board_y + self.line_thickness * (iRow + 1) + self.cell_size * iRow
             for iCol in range(0, self.num_cells):
-                x = self.board_x + self.line_thickness * (iCol + 1) + self.cell_size * iCol
+                x = (
+                    self.board_x
+                    + self.line_thickness * (iCol + 1)
+                    + self.cell_size * iCol
+                )
                 cells[iRow][iCol].rect.x = x
                 cells[iRow][iCol].rect.y = y
 
@@ -179,8 +194,11 @@ class grid:
         # Only draw the grid if it's this player's turn.
         if self.player_ID == player_turn:
             # Draw the black background of the game grid
-            pygame.draw.rect(gameDisplay, colors["black"], [
-                             self.board_x, self.board_y, self.board_size, self.board_size])
+            pygame.draw.rect(
+                gameDisplay,
+                colors["black"],
+                [self.board_x, self.board_y, self.board_size, self.board_size],
+            )
             # Draw all of the cells in the grid
             for iRow in range(len(self.cells)):
                 for iCol in range(len(self.cells[iRow])):
@@ -213,12 +231,14 @@ class grid:
 
     def attack(self, enemy_grid):
         # Check if the selected cell contains an existing guess
-        if self.check_cell_contents(self.cursor_cells, "hit") or self.check_cell_contents(self.cursor_cells, "miss"):
+        if self.check_cell_contents(
+            self.cursor_cells, "hit"
+        ) or self.check_cell_contents(self.cursor_cells, "miss"):
             # User has already attacked this cell, don't let them attack it again.cursor_cells
             attack_is_valid = False
-            print('INVALID ATTACK')
+            print("INVALID ATTACK")
             sounds["buzzer"].play()
-            
+
         else:
             attack_is_valid = True
             # This cell is blank, so we can attack it. Now we need to check the enemy's board to see if the target cell contains a boat
@@ -232,7 +252,7 @@ class grid:
                 enemy_grid.cells[iRow][iCol].contents = colors["hit"]
                 enemy_grid.num_hits_taken += 1
                 persistent_message_display("HIT!", self.cells[iRow][iCol].rect.center)
-                print('HIT')
+                print("HIT")
 
             else:
                 # Miss!
@@ -250,7 +270,7 @@ class grid:
             # Check for collision with existing boat
             if self.check_cell_contents(self.cursor_cells, "boat") == True:
                 # There's already a boat here, we can't place it
-                print('BAD SPOT FOR BOAT')
+                print("BAD SPOT FOR BOAT")
                 return click_is_valid
             else:
                 click_is_valid = True
@@ -317,7 +337,9 @@ def message_display(text, center, font_size=12, font="freesansbold.ttf"):
     gameDisplay.blit(TextSurface, TextRect)
 
 
-def persistent_message_display(text, center, font_size=12, font='freesansbold.ttf', duration=1):
+def persistent_message_display(
+    text, center, font_size=12, font="freesansbold.ttf", duration=1
+):
     message_display(text, center, font_size, font)
     pygame.display.update()
     if duration > 0:
@@ -326,9 +348,9 @@ def persistent_message_display(text, center, font_size=12, font='freesansbold.tt
 
 def fullscreen_message_display(text, duration=2):
     # Display a message on the screen
-    message_display(text,
-                    center=((display_width / 2), (display_height / 2)),
-                    font_size=115)
+    message_display(
+        text, center=((display_width / 2), (display_height / 2)), font_size=115
+    )
 
     pygame.display.update()
     if duration > 0:
@@ -336,7 +358,7 @@ def fullscreen_message_display(text, duration=2):
 
 
 # Window title
-pygame.display.set_caption('Battleship')
+pygame.display.set_caption("Battleship")
 
 # Define the game's clock
 clock = pygame.time.Clock()
@@ -364,40 +386,52 @@ def game_loop():
     left_margin = 50
     top_margin = 50
 
-    grid_player1_enemy = grid(player_ID=1,
-                              x=left_margin,
-                              y=top_margin,
-                              board_size=board_size,
-                              is_active=False,
-                              board_type="enemy")
+    grid_player1_enemy = grid(
+        player_ID=1,
+        x=left_margin,
+        y=top_margin,
+        board_size=board_size,
+        is_active=False,
+        board_type="enemy",
+    )
 
-    grid_player1_own = grid(player_ID=1,
-                            x=grid_player1_enemy.board_x,
-                            y=grid_player1_enemy.board_y + grid_player1_enemy.board_size + vertical_grid_separation,
-                            board_size=board_size,
-                            is_active=True,
-                            board_type="own")
+    grid_player1_own = grid(
+        player_ID=1,
+        x=grid_player1_enemy.board_x,
+        y=grid_player1_enemy.board_y
+        + grid_player1_enemy.board_size
+        + vertical_grid_separation,
+        board_size=board_size,
+        is_active=True,
+        board_type="own",
+    )
 
-    grid_player2_enemy = grid(player_ID=2,
-                              x=grid_player1_enemy.board_x + grid_player1_enemy.board_size + horizontal_grid_separation,
-                              y=top_margin,
-                              board_size=board_size,
-                              is_active=False,
-                              board_type="enemy")
+    grid_player2_enemy = grid(
+        player_ID=2,
+        x=grid_player1_enemy.board_x
+        + grid_player1_enemy.board_size
+        + horizontal_grid_separation,
+        y=top_margin,
+        board_size=board_size,
+        is_active=False,
+        board_type="enemy",
+    )
 
-    grid_player2_own = grid(player_ID=2,
-                            x=grid_player2_enemy.board_x,
-                            y=grid_player1_own.board_y,
-                            board_size=board_size,
-                            is_active=False,
-                            board_type="own")
+    grid_player2_own = grid(
+        player_ID=2,
+        x=grid_player2_enemy.board_x,
+        y=grid_player1_own.board_y,
+        board_size=board_size,
+        is_active=False,
+        board_type="own",
+    )
 
     gameExit = False
     # Variables for tracking which direction to move the cursor
     row_increment = 0
     col_increment = 0
     cursor_move_complete = False
-    fullscreen_message_display('Player 1, place your boats')
+    fullscreen_message_display("Player 1, place your boats")
     active_grid = grid_player1_own
     enemy_grid = grid_player2_own
     while not gameExit:
@@ -426,10 +460,12 @@ def game_loop():
                     click_is_valid = active_grid.cursor_click(enemy_grid)
 
             if event.type == pygame.KEYUP:
-                if event.key in [pygame.K_LEFT,
-                                 pygame.K_RIGHT,
-                                 pygame.K_DOWN,
-                                 pygame.K_UP]:
+                if event.key in [
+                    pygame.K_LEFT,
+                    pygame.K_RIGHT,
+                    pygame.K_DOWN,
+                    pygame.K_UP,
+                ]:
                     cursor_move_complete = True
 
                 if event.key == pygame.K_SPACE:
@@ -457,15 +493,23 @@ def game_loop():
         gameDisplay.fill(colors["white"])
         grid_player1_enemy.draw()
         grid_player1_own.draw()
-        message_display("Player 1",
-                        center=(grid_player1_enemy.board_x + grid_player1_enemy.board_size / 2,
-                                top_margin / 2))
+        message_display(
+            "Player 1",
+            center=(
+                grid_player1_enemy.board_x + grid_player1_enemy.board_size / 2,
+                top_margin / 2,
+            ),
+        )
 
         grid_player2_enemy.draw()
         grid_player2_own.draw()
-        message_display("Player 2",
-                        center=(grid_player2_enemy.board_x + grid_player2_enemy.board_size / 2,
-                                top_margin / 2))
+        message_display(
+            "Player 2",
+            center=(
+                grid_player2_enemy.board_x + grid_player2_enemy.board_size / 2,
+                top_margin / 2,
+            ),
+        )
 
         # Update game phase & player turn
         if game_phase == game_phases["setup"]:
@@ -475,9 +519,11 @@ def game_loop():
                 active_grid.is_active = False
                 active_grid = grid_player2_own
                 active_grid.is_active = True
-                fullscreen_message_display('Player 2, place your boats')
+                fullscreen_message_display("Player 2, place your boats")
 
-            elif player_turn == 2 and active_grid.num_boats_placed == num_boats_to_place:
+            elif (
+                player_turn == 2 and active_grid.num_boats_placed == num_boats_to_place
+            ):
                 # Player 2 finished their setup as well, so now we transition into the play phase
                 player_turn = 1
                 active_grid.is_active = False
